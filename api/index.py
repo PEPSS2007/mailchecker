@@ -12,6 +12,7 @@ if str(root_dir) not in sys.path:
 
 from fastapi import Request  # noqa: E402
 from fastapi.responses import JSONResponse  # noqa: E402
+
 from app.main import app  # noqa: E402
 
 
