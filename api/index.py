@@ -4,32 +4,41 @@ Handles Vercel path rewrites and exposes ASGI handler.
 """
 import sys
 from pathlib import Path
+from urllib.parse import parse_qs
 
 # Add project root to sys.path
 root_dir = Path(__file__).resolve().parent.parent
 if str(root_dir) not in sys.path:
     sys.path.insert(0, str(root_dir))
 
-from fastapi import Request  # noqa: E402
-from app.main import app  # noqa: E402
+from app.main import app as fastapi_app  # noqa: E402
 
 
-@app.middleware("http")
-async def vercel_routing_middleware(request: Request, call_next):
+class VercelPathFixMiddleware:
     """
-    Maps Vercel's rewritten ?path= parameter back to FastAPI's request.scope['path'].
+    Pure ASGI middleware that modifies scope['path'] before FastAPI routing dispatches.
+    Restores the target path forwarded by Vercel query rewrites (?path=...).
     """
-    path_param = request.query_params.get("path")
-    if path_param:
-        if path_param in ("docs", "openapi.json"):
-            request.scope["path"] = f"/{path_param}"
-        elif path_param.startswith("api/"):
-            request.scope["path"] = f"/{path_param}"
-        else:
-            request.scope["path"] = f"/api/{path_param}"
 
-    return await call_next(request)
+    def __init__(self, asgi_app):
+        self.asgi_app = asgi_app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http":
+            qs = scope.get("query_string", b"").decode("utf-8")
+            params = parse_qs(qs)
+            if "path" in params and params["path"]:
+                target = params["path"][0]
+                if target in ("docs", "openapi.json"):
+                    scope["path"] = f"/{target}"
+                elif target.startswith("api/"):
+                    scope["path"] = f"/{target}"
+                else:
+                    scope["path"] = f"/api/{target}"
+
+        await self.asgi_app(scope, receive, send)
 
 
-# Vercel ASGI handler
+# Exported ASGI entrypoint for Vercel runtime
+app = VercelPathFixMiddleware(fastapi_app)
 handler = app
