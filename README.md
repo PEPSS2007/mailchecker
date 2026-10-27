@@ -1,6 +1,6 @@
 # Email Deliverability Checker
 
-[![CI / Automated Quality & Testing](https://github.com/your-username/mailchecker/actions/workflows/ci.yml/badge.svg)](https://github.com/your-username/mailchecker/actions)
+[![CI / Automated Quality & Testing](https://github.com/PEPSS2007/mailchecker/actions/workflows/ci.yml/badge.svg)](https://github.com/PEPSS2007/mailchecker/actions)
 [![Python 3.12](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg)](https://fastapi.tiangolo.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -96,7 +96,7 @@ flowchart TD
 ### 1. Clone & Set Up Virtual Environment
 
 ```bash
-git clone https://github.com/your-username/mailchecker.git
+git clone https://github.com/PEPSS2007/mailchecker.git
 cd mailchecker
 
 # Create virtual environment
@@ -151,7 +151,7 @@ Render is an ideal deployment platform for this containerized service. Follow th
    git add .
    git commit -m "feat: complete email deliverability checker application"
    git branch -M main
-   git remote add origin https://github.com/your-username/mailchecker.git
+   git remote add origin https://github.com/PEPSS2007/mailchecker.git
    git push -u origin main
    ```
 2. **Log into Render** ([render.com](https://render.com)) and click **New +** &rarr; **Web Service**.
