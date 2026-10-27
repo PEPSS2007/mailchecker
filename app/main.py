@@ -168,12 +168,14 @@ if settings.STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=settings.STATIC_DIR), name="static")
 
 
-@app.get("/", include_in_schema=False)
-async def serve_index():
-    """Serves the dashboard index.html frontend."""
-    index_path = settings.STATIC_DIR / "index.html"
-    if not index_path.exists():
-        index_path = settings.BASE_DIR.parent / "public" / "index.html"
-    if index_path.exists():
-        return FileResponse(index_path, media_type="text/html")
-    return JSONResponse({"message": "Email Deliverability Checker API is running."})
+@app.get("/{full_path:path}", include_in_schema=False)
+async def catch_all_debug(full_path: str, request: Request):
+    return JSONResponse(
+        {
+            "catch_all_param": full_path,
+            "url_path": request.url.path,
+            "scope_path": request.scope.get("path"),
+            "headers": dict(request.headers),
+        }
+    )
+
