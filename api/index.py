@@ -10,10 +10,9 @@ root_dir = Path(__file__).resolve().parent.parent
 if str(root_dir) not in sys.path:
     sys.path.insert(0, str(root_dir))
 
-from fastapi import Request
-from fastapi.responses import JSONResponse
-
-from app.main import app
+from fastapi import Request  # noqa: E402
+from fastapi.responses import JSONResponse  # noqa: E402
+from app.main import app  # noqa: E402
 
 
 @app.middleware("http")
@@ -23,7 +22,6 @@ async def vercel_routing_middleware(request: Request, call_next):
     if matched_path:
         request.scope["path"] = matched_path
     elif request.scope.get("path") in ("/api/index.py", "/api/index"):
-        # If no matched path header, fallback to stripping /index.py
         request.scope["path"] = "/api/health"
 
     return await call_next(request)
