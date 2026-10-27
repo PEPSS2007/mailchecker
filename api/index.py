@@ -11,33 +11,24 @@ if str(root_dir) not in sys.path:
     sys.path.insert(0, str(root_dir))
 
 from fastapi import Request  # noqa: E402
-from fastapi.responses import JSONResponse  # noqa: E402
-
 from app.main import app  # noqa: E402
 
 
 @app.middleware("http")
 async def vercel_routing_middleware(request: Request, call_next):
-    # Vercel supplies the actual requested URL path in 'x-matched-path' or 'x-now-route-matches'
-    matched_path = request.headers.get("x-matched-path")
-    if matched_path:
-        request.scope["path"] = matched_path
-    elif request.scope.get("path") in ("/api/index.py", "/api/index"):
-        request.scope["path"] = "/api/health"
+    """
+    Maps Vercel's rewritten ?path= parameter back to FastAPI's request.scope['path'].
+    """
+    path_param = request.query_params.get("path")
+    if path_param:
+        if path_param in ("docs", "openapi.json"):
+            request.scope["path"] = f"/{path_param}"
+        elif path_param.startswith("api/"):
+            request.scope["path"] = f"/{path_param}"
+        else:
+            request.scope["path"] = f"/api/{path_param}"
 
     return await call_next(request)
-
-
-@app.get("/api/debug")
-@app.get("/debug")
-async def vercel_debug_info(request: Request):
-    return JSONResponse(
-        {
-            "path": request.url.path,
-            "scope_path": request.scope.get("path"),
-            "headers": {k: v for k, v in request.headers.items() if "auth" not in k.lower()},
-        }
-    )
 
 
 # Vercel ASGI handler
