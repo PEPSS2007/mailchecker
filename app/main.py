@@ -100,6 +100,7 @@ class HealthResponse(BaseModel):
 
 
 @app.get("/api/health", response_model=HealthResponse)
+@app.get("/health", response_model=HealthResponse)
 async def get_health_status():
     """
     Returns service health and dynamic SMTP port 25 capability information.
@@ -122,6 +123,7 @@ async def get_health_status():
 
 
 @app.post("/api/check", response_model=CheckResponse)
+@app.post("/check", response_model=CheckResponse)
 @limiter.limit(settings.DEFAULT_RATE_LIMIT)
 async def check_emails(payload: CheckEmailsRequest, request: Request):
     """
@@ -170,6 +172,8 @@ if settings.STATIC_DIR.exists():
 async def serve_index():
     """Serves the dashboard index.html frontend."""
     index_path = settings.STATIC_DIR / "index.html"
+    if not index_path.exists():
+        index_path = settings.BASE_DIR.parent / "public" / "index.html"
     if index_path.exists():
         return FileResponse(index_path, media_type="text/html")
     return JSONResponse({"message": "Email Deliverability Checker API is running."})

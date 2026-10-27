@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Professional, privacy-first email deliverability checker. Verifies syntax, DNS MX records, and safe SMTP acceptance without sending actual emails.">
+  <title>Email Deliverability Checker — Fast, Safe & Accurate</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- System Status Banner -->
+    <header class="system-banner" id="systemBanner" role="region" aria-label="System Status">
+      <div class="banner-content">
+        <span class="status-indicator-dot" id="bannerDot"></span>
+        <span class="banner-text" id="bannerText">Checking system verification capability...</span>
+        <span class="banner-badge" id="bannerBadge">Detecting Mode</span>
+      </div>
+      <button class="banner-refresh-btn" id="refreshHealthBtn" title="Re-check SMTP Capability" aria-label="Refresh status">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+      </button>
+    </header>
+
+    <!-- Navigation Header -->
+    <nav class="navbar">
+      <div class="brand">
+        <div class="brand-logo" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 13V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h9"/>
+            <polyline points="22,6 12,13 2,6"/>
+            <path d="m16 19 2 2 4-4"/>
+          </svg>
+        </div>
+        <div class="brand-info">
+          <h1>MailChecker</h1>
+          <span class="brand-tagline">Deliverability & Mailbox Verification</span>
+        </div>
+      </div>
+      <div class="nav-links">
+        <a href="#howItWorks" class="nav-link">How It Works</a>
+        <a href="#safeguards" class="nav-link">Privacy & Safety</a>
+        <a href="/docs" target="_blank" class="nav-link nav-api">API Docs</a>
+      </div>
+    </nav>
+
+    <!-- Hero / Intro -->
+    <main class="main-content">
+      <section class="hero-section">
+        <h2 class="hero-title">Verify Email Deliverability <span class="gradient-text">Safely & Privately</span></h2>
+        <p class="hero-subtitle">
+          Test mailbox deliverability using RFC-compliant syntax, DNS MX validation, and non-intrusive SMTP handshakes. <strong>We never send emails or issue DATA commands.</strong>
+        </p>
+      </section>
+
+      <!-- Input Card -->
+      <section class="card input-card">
+        <div class="card-header">
+          <div class="header-title-group">
+            <h3 class="card-title">Input Email Addresses</h3>
+            <span class="badge badge-muted">Max 100 per check</span>
+          </div>
+          <div class="quick-samples">
+            <span class="sample-label">Load Samples:</span>
+            <button type="button" class="btn-sample" id="sampleValidBtn">Valid Mix</button>
+            <button type="button" class="btn-sample" id="sampleMixedBtn">Edge Cases</button>
+            <button type="button" class="btn-sample" id="sampleInvalidBtn">Invalid Syntax</button>
+          </div>
+        </div>
+
+        <div class="textarea-wrapper">
+          <textarea
+            id="emailInput"
+            class="email-textarea"
+            placeholder="Paste email addresses here... Supports newlines, commas, semicolons, and spaces.&#10;&#10;e.g.&#10;sarah.chen@stripe.com&#10;alexander@gmail.com, support@github.com;&#10;fake-user@nonexistent-domain-404.com"
+            rows="6"
+            aria-label="Email addresses input"
+          ></textarea>
+        </div>
+
+        <div class="input-footer">
+          <div class="input-stats">
+            <span id="detectedCount">0</span> detected addresses
+          </div>
+          <div class="action-buttons">
+            <button type="button" id="clearInputBtn" class="btn btn-secondary">Clear</button>
+            <button type="button" id="checkEmailsBtn" class="btn btn-primary">
+              <span class="btn-spinner" id="btnSpinner" aria-hidden="true"></span>
+              <span class="btn-text" id="btnText">Check Emails</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Verification Progress Indicator -->
+        <div class="progress-bar-container" id="progressBarContainer" style="display: none;">
+          <div class="progress-header">
+            <span class="progress-label" id="progressStatusText">Running multi-stage verification...</span>
+            <span class="progress-percent" id="progressPercent">0%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+          </div>
+        </div>
+
+        <!-- Inline Error Alert -->
+        <div class="alert alert-error" id="errorAlert" style="display: none;" role="alert">
+          <span class="alert-icon" aria-hidden="true">⚠️</span>
+          <span class="alert-message" id="errorMessage"></span>
+          <button type="button" class="alert-close" id="closeErrorBtn">&times;</button>
+        </div>
+      </section>
+
+      <!-- Results Section -->
+      <section class="results-section" id="resultsSection" style="display: none;">
+        <!-- Metrics / Summary Cards -->
+        <div class="metrics-grid">
+          <div class="metric-card metric-total">
+            <div class="metric-icon" aria-hidden="true">📊</div>
+            <div class="metric-data">
+              <span class="metric-value" id="metricTotal">0</span>
+              <span class="metric-label">Total Checked</span>
+            </div>
+          </div>
+          <div class="metric-card metric-deliverable">
+            <div class="metric-icon" aria-hidden="true">✅</div>
+            <div class="metric-data">
+              <span class="metric-value" id="metricDeliverable">0</span>
+              <span class="metric-label">Likely Deliverable</span>
+            </div>
+          </div>
+          <div class="metric-card metric-bounce">
+            <div class="metric-icon" aria-hidden="true">❌</div>
+            <div class="metric-data">
+              <span class="metric-value" id="metricBounce">0</span>
+              <span class="metric-label">Likely Bounce</span>
+            </div>
+          </div>
+          <div class="metric-card metric-unknown">
+            <div class="metric-icon" aria-hidden="true">⚠️</div>
+            <div class="metric-data">
+              <span class="metric-value" id="metricUnknown">0</span>
+              <span class="metric-label">Unknown / Inconclusive</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Results Table Card -->
+        <div class="card table-card">
+          <div class="table-toolbar">
+            <div class="filter-tabs" role="tablist">
+              <button class="filter-tab active" data-filter="all" role="tab" aria-selected="true">All (<span id="tabCountAll">0</span>)</button>
+              <button class="filter-tab" data-filter="deliverable" role="tab">Deliverable (<span id="tabCountDeliverable">0</span>)</button>
+              <button class="filter-tab" data-filter="bounce" role="tab">Bounce (<span id="tabCountBounce">0</span>)</button>
+              <button class="filter-tab" data-filter="unknown" role="tab">Unknown (<span id="tabCountUnknown">0</span>)</button>
+            </div>
+            <div class="table-actions">
+              <div class="search-input-wrapper">
+                <input type="text" id="tableSearch" class="search-input" placeholder="Search emails..." aria-label="Search results">
+              </div>
+              <button type="button" id="copyResultsBtn" class="btn btn-sm btn-outline" title="Copy to clipboard">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copy
+              </button>
+              <button type="button" id="exportCsvBtn" class="btn btn-sm btn-outline" title="Export as CSV">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export CSV
+              </button>
+              <button type="button" id="clearResultsBtn" class="btn btn-sm btn-danger-outline" title="Clear results">Clear</button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="results-table" id="resultsTable">
+              <thead>
+                <tr>
+                  <th scope="col" style="width: 32%;">Email Address</th>
+                  <th scope="col" style="width: 16%;">Verdict</th>
+                  <th scope="col" style="width: 18%;">Reason Code</th>
+                  <th scope="col" style="width: 24%;">Explanation</th>
+                  <th scope="col" style="width: 10%;">Flags</th>
+                </tr>
+              </thead>
+              <tbody id="resultsTableBody">
+                <!-- Dynamically Populated -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="table-empty-search" id="emptySearchState" style="display: none;">
+            <p>No results match your active filter or search query.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Educational & Technical Architecture Section -->
+      <section class="info-section" id="howItWorks">
+        <h3 class="section-title">How Verification Works</h3>
+        <p class="section-desc">Our modular 6-stage pipeline guarantees safety, privacy, and RFC adherence.</p>
+
+        <div class="pipeline-grid">
+          <div class="pipeline-card">
+            <div class="stage-num">01</div>
+            <h4>Stage A: Parse & Normalize</h4>
+            <p>Splits inputs on commas, semicolons, and whitespace. Validates RFC 5322 syntax using <code>email-validator</code> and enforces domain casing and deduplication.</p>
+          </div>
+          <div class="pipeline-card">
+            <div class="stage-num">02</div>
+            <h4>Stage B: DNS & Mail Routing</h4>
+            <p>Queries DNS MX records with dnspython. Detects RFC 7505 Null MX (which explicitly refuses email) and evaluates RFC 5321 A/AAAA mail fallback.</p>
+          </div>
+          <div class="pipeline-card">
+            <div class="stage-num">03</div>
+            <h4>Stage C: Heuristic Profiling</h4>
+            <p>Cross-references a bundled database of disposable/burner domains and detects role accounts (e.g. <code>admin@</code>, <code>support@</code>) without altering core verdicts.</p>
+          </div>
+          <div class="pipeline-card">
+            <div class="stage-num">04</div>
+            <h4>Stage D: Safe SMTP Probe</h4>
+            <p>Initiates a restricted handshake (EHLO, MAIL FROM, RCPT TO, QUIT). <strong>Never issues DATA command or transmits email body.</strong></p>
+          </div>
+          <div class="pipeline-card">
+            <div class="stage-num">05</div>
+            <h4>Stage E: Catch-All Detection</h4>
+            <p>Probes a synthetic randomized recipient on the domain. If the server accepts fake addresses, it is flagged as Catch-All and classified as Unknown.</p>
+          </div>
+          <div class="pipeline-card">
+            <div class="stage-num">06</div>
+            <h4>Stage F: Conservative Verdict</h4>
+            <p>Standardizes outcomes into <code>deliverable</code>, <code>bounce</code>, or <code>unknown</code> with actionable reasons and honest degraded mode handling.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Safeguards & Disclaimer Section -->
+      <section class="safeguards-section" id="safeguards">
+        <div class="card safeguards-card">
+          <div class="safeguards-header">
+            <span class="safeguard-badge">Security & Privacy Protocol</span>
+            <h3>Ethical Safeguards & Honest Limitations</h3>
+          </div>
+          <div class="safeguards-grid">
+            <div class="safeguard-item">
+              <span class="safeguard-icon">🛡️</span>
+              <div>
+                <strong>Zero Message Transmission</strong>
+                <p>SMTP conversations terminate immediately after RCPT TO with a QUIT command. The DATA command is blocked by code assertions.</p>
+              </div>
+            </div>
+            <div class="safeguard-item">
+              <span class="safeguard-icon">🔒</span>
+              <div>
+                <strong>No Data Retention & Safe Logging</strong>
+                <p>Submitted emails are processed strictly in-memory and never stored. All application logs mask local parts (e.g. <code>j***e@domain.com</code>).</p>
+              </div>
+            </div>
+            <div class="safeguard-item">
+              <span class="safeguard-icon">🌐</span>
+              <div>
+                <strong>SSRF Protection & Concurrency Limits</strong>
+                <p>Resolved MX host IP addresses are checked against private, loopback, and link-local CIDRs before opening sockets. Per-domain semaphores prevent mail-server overload.</p>
+              </div>
+            </div>
+            <div class="safeguard-item">
+              <span class="safeguard-icon">⚠️</span>
+              <div>
+                <strong>Deliverability Limitations</strong>
+                <p>A positive SMTP acceptance proves the mailbox exists at check time, but does not guarantee spam-filter placement or future inbox delivery.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-content">
+        <p>Email Deliverability Checker &copy; 2026 &bull; Internship Software Development Project</p>
+        <p class="footer-sub">FastAPI &bull; Python 3.12 &bull; dnspython &bull; aiosmtplib &bull; Vanilla JS</p>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
