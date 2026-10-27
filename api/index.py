@@ -12,6 +12,7 @@ if str(root_dir) not in sys.path:
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
+
 from app.main import app
 
 
