@@ -5,7 +5,7 @@
 **Evaluation Track**: Senior Full-Stack Development Internship  
 **Submission Date**: October 2026  
 **Repository URL**: `https://github.com/PEPSS2007/mailchecker` *(fill in upon GitHub push)*  
-**Live Deployment URL**: `https://mailchecker-service.onrender.com` *(fill in upon Render deployment)*  
+**Live Deployment URL**: `https://mailchecker-steel.vercel.app` *(fill in upon Render deployment)*  
 
 ---
 
